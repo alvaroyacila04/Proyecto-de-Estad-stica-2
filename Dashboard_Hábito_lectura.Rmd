@@ -1,0 +1,602 @@
+---
+title: "El hábito de lectura en adultos limeños"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+---
+
+```{r}
+library(flexdashboard)
+```
+
+
+
+
+# Análisis de variable dependiente
+
+## Variable independiente {.tabset}
+
+### Estadísticos descriptivos
+
+```{r}
+library(rio)
+library(readxl)
+data <- read_excel("capitulo300-400.xlsx")
+library(dplyr)
+
+# Variables de interés de data2
+data <- data %>%
+  select(P409, P407_4, P431, P435, P301, P303, P306, ESTRATOSOCIO, P209, P210_A, UBIGEO)
+class(data$P409)
+# Convertir P409 a numérico (si es necesario)
+data$P409 <- as.numeric(data$P409)
+
+# Recodificar la variable P409 de números a las categorías de texto
+data$P409_recoded <- recode(data$P409, 
+                                     `1` = "Sí lee frecuentemente", 
+                                     `2` = "Sí lee frecuentemente", 
+                                     `3` = "No lee frecuentemente", 
+                                     `4` = "No lee frecuentemente", 
+                                     `5` = "No lee frecuentemente", 
+                                     `6` = "No lee frecuentemente")
+
+# Cambiar el nombre de las variables en la base de datos
+data <- data %>%
+  rename(
+    asistencia_club = P407_4,
+    asistencia_biblioteca = P431,
+    asistencia_festival = P435,
+    lengua_materna = P301,
+    etnia = P303,
+    nivel_educ = P306,
+    estratosocio = ESTRATOSOCIO,
+    sexo = P209,
+    edad = P210_A
+  )
+data_lima <- subset(data, UBIGEO >= 150101 & UBIGEO <= 151033)
+names(data_lima)[12]=c("habito_lectura")
+data_lima$P409 <- NULL
+data_lima = na.omit(data_lima)
+data_lima$habito_lectura = as.factor(data_lima$habito_lectura)
+library(dplyr)
+data_lima %>% group_by(habito_lectura) %>%  summarise(Freq = n()) %>% mutate(Porcentaje = (Freq/sum(Freq)*100))
+library(DescTools)
+Mode(data_lima$habito_lectura)
+
+```
+
+
+
+
+### Gráfico de frecuencias
+```{r}
+library(ggplot2)
+ggplot(data_lima, aes(x = factor(habito_lectura))) + 
+  geom_bar(fill = "skyblue", color = "black") +
+  labs(title = "¿Con qué frecuencia lees un libro?",  
+       x = "Frecuencia de lectura",          
+       y = "Número de Respuestas") +        
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+```
+```{r}
+str(data_lima)
+```
+
+```{r}
+table(data_lima$nivel_educ)
+```
+
+```{r}
+data_lima$nivel_educ[data_lima$nivel_educ ==1]  <- NA
+table(data_lima$nivel_educ)
+```
+
+```{r}
+table(data_lima$estratosocio)
+```
+
+```{r}
+data_lima$estratosocio <- factor(
+  data_lima$estratosocio,
+  levels = c(6, 5, 4, 3, 2, 1),
+  labels = c("Rural", "Bajo", "Medio bajo", "Medio", "Medio alto", "Alto"),
+  ordered = TRUE
+)
+```
+
+```{r}
+str(data_lima$estratosocio)
+```
+
+
+```{r}
+data_lima$asistencia_club <- factor(data_lima$asistencia_club, levels = c(1, 2), labels = c("Sí", "No"))
+```
+
+```{r}
+data_lima$asistencia_biblioteca <- factor(data_lima$asistencia_biblioteca, levels = c(1, 2), labels = c("Sí", "No"))
+```
+
+```{r}
+data_lima$asistencia_festival <- factor(data_lima$asistencia_festival, levels = c(1, 2), labels = c("Sí", "No"))
+```
+
+```{r}
+str(data_lima$lengua_materna)
+table(data_lima$lengua_materna)
+```
+
+```{r}
+data_lima$lengua_materna <- recode(data_lima$lengua_materna, 
+                                     `1` = "Originaria", 
+                                     `2` = "Originaria", 
+                                     `3` = "Originaria", 
+                                     `4` = "Originaria", 
+                                     `5` = "Originaria", 
+                                     `6` = "Originaria", 
+                                     `7` = "Originaria", 
+                                     `8` = "Originaria", 
+                                     `9` = "Originaria", 
+                                     `10` = "Español", 
+                                     `11` = "Español",  
+                                     `12` = "Español",  
+                                     `13` = "Español",  
+                                     `14` = "No escucha/no habla",
+                                     `15` = "Lengua de señas")
+
+table(data_lima$lengua_materna)
+```
+
+```{r}
+data_lima$lengua_materna = factor(data_lima$lengua_materna)
+```
+
+```{r}
+data_lima$etnia = recode(data_lima$etnia,
+                    `1` = "Indigena",
+                    `2` = "Indigena",
+                    `3` = "Indigena",
+                    `4` = "Indigena",
+                    `5` = "Afroperuano",
+                    `6` = "Blanco",
+                    `7` = "Mestizo",
+                    `8` = "No sabe/No responde",   
+                    `9` = "No sabe/No responde")
+
+data_lima$etnia = factor(data_lima$etnia)
+```
+
+```{r}
+str(data_lima$nivel_educ)
+summary(data_lima$nivel_educ)
+```
+
+```{r}
+data_lima$nivel_educ= as.numeric(data_lima$nivel_educ)
+str(data_lima$nivel_educ)
+summary(data_lima$nivel_educ)
+table(data_lima$nivel_educ)
+```
+
+```{r}
+data_lima$nivel_educ <- factor(
+  data_lima$nivel_educ,
+  levels = c(3,4,5,6,8,9,10,11,12),
+  labels = c( "Escolar", "Escolar", "Escolar", "Escolar", "Tecnica", "Tecnica", "Universitario", "Universitario", "Maestria/Doctorado"),
+  ordered = TRUE
+)
+```
+
+```{r}
+str(data_lima$nivel_educ)
+```
+
+```{r}
+data_lima$sexo <- factor(data_lima$sexo, levels = c(1, 2), labels = c("Hombre", "Mujer"))
+```
+
+# Chi-cuadrado
+
+## Análisis chi-cuadrado {.tabset}
+
+### Pruebas chi-cuadrado
+
+Column {data-width=650}
+
+#### Prueba 1: habito de lectura y asistencia a club
+```{r}
+tabla1= table(data_lima$habito_lectura,data_lima$asistencia_club)
+chisq.test(tabla1)
+```
+#### Prueba 2: habito de lectura y asistencia a bibliotecas
+```{r}
+tabla2= table(data_lima$habito_lectura,data_lima$asistencia_biblioteca)
+chisq.test(tabla2)
+```
+#### Prueba 3: habito de lectura y asistencia a festival
+```{r}
+tabla3= table(data_lima$habito_lectura,data_lima$asistencia_festival)
+chisq.test(tabla3)
+```
+#### Prueba 4:habito de lectura y lengua materna
+```{r}
+tabla4= table(data_lima$habito_lectura,data_lima$lengua_materna)
+chisq.test(tabla4)
+```
+#### Prueba 5:habito de lectura y etnia
+```{r}
+tabla5= table(data_lima$habito_lectura,data_lima$etnia)
+chisq.test(tabla5)
+```
+#### Prueba 6: habito de lectura y nivel educativo
+```{r}
+tabla6= table(data_lima$habito_lectura,data_lima$nivel_educ)
+chisq.test(tabla6)
+```
+###Prueba 7 : habito de lectura y sexo
+```{r}
+tabla7= table(data_lima$habito_lectura,data_lima$sexo)
+chisq.test(tabla7)
+```
+###Prueba 8:habito de lectura y estratosocioeconómico
+```{r}
+tabla8= table(data_lima$habito_lectura,data_lima$estratosocio)
+chisq.test(tabla8)
+```
+
+### Gráficos de las pruebas chi-cuadrado {.tabset}
+
+#### 1. Relación entre el hábito de lectura y la asistencia al club
+```{r}
+tabla1
+tablapor1 = tabla1 %>%
+           prop.table(2) %>%  
+           round(2) #redondear el resultado a 2 decimales
+toPlot1 = as.data.frame(tablapor1) 
+  ggplot(toPlot1, aes(x=Var2, y=Freq*100, fill=Var1)) +
+  geom_bar(position="stack", stat="identity")+ #Stack indica que son barras apiladas
+  geom_text(aes(label=paste0(Freq*100,"%")), 
+            position = position_stack(vjust = 0.5), 
+             size = 4,
+             fontface="bold")+
+  labs(x="Lectura", y="Porcentaje", fill="Asistencia a clubs")+
+  theme_minimal()
+```
+
+#### 2. Relación entre el hábito de lectura y la asistencia a la biblioteca
+
+```{r}
+tabla2
+tablapor2 = tabla2 %>%
+           prop.table(2) %>%  
+           round(2) #redondear el resultado a 2 decimales
+toPlot2 = as.data.frame(tablapor2)
+ ggplot(toPlot2, aes(x=Var2, y=Freq*100, fill=Var1)) +
+  geom_bar(position="stack", stat="identity")+ #Stack indica que son barras apiladas
+  geom_text(aes(label=paste0(Freq*100,"%")), 
+            position = position_stack(vjust = 0.5), 
+             size = 4,
+             fontface="bold")+
+  labs(x="Lectura", y="Porcentaje", fill="Asistencia a biblioteca")+
+  theme_minimal()
+```
+
+#### 3. Relación entre el hábito de lectura y la asistencia a festivales del libro
+
+```{r}
+tabla3
+tablapor3 = tabla3 %>%
+           prop.table(2) %>%  
+           round(2) #redondear el resultado a 2 decimales
+toPlot3 = as.data.frame(tablapor3)
+ ggplot(toPlot3, aes(x=Var2, y=Freq*100, fill=Var1)) +
+  geom_bar(position="stack", stat="identity")+ #Stack indica que son barras apiladas
+  geom_text(aes(label=paste0(Freq*100,"%")), 
+            position = position_stack(vjust = 0.5), 
+             size = 4,
+             fontface="bold")+
+  labs(x="Lectura", y="Porcentaje", fill="Asistencia a festivales")+
+  theme_minimal()
+
+```
+
+#### 4. Relación entre el hábito de lectura y la lengua materna
+
+```{r}
+tabla4
+tablapor4 = tabla4 %>%
+           prop.table(2) %>%  
+           round(2) #redondear el resultado a 2 decimales
+toPlot4 = as.data.frame(tablapor4)
+  ggplot(toPlot4, aes(x=Var2, y=Freq*100, fill=Var1)) +
+  geom_bar(position="stack", stat="identity")+ #Stack indica que son barras apiladas
+  geom_text(aes(label=paste0(Freq*100,"%")), 
+            position = position_stack(vjust = 0.5), 
+             size = 4,
+             fontface="bold")+
+  labs(x="Lectura", y="Porcentaje", fill="Lengua Materna")+
+  theme_minimal()
+```
+
+#### 5. Relación entre el hábito de lectura y la etnia
+
+```{r}
+tabla5
+tablapor5 = tabla5 %>%
+           prop.table(2) %>%  
+           round(2) #redondear el resultado a 2 decimales
+toPlot5 = as.data.frame(tablapor5)
+  ggplot(toPlot5, aes(x=Var2, y=Freq*100, fill=Var1)) +
+  geom_bar(position="stack", stat="identity")+ #Stack indica que son barras apiladas
+  geom_text(aes(label=paste0(Freq*100,"%")), 
+            position = position_stack(vjust = 0.5), 
+             size = 4,
+             fontface="bold")+
+  labs(x="Lectura", y="Porcentaje", fill="Etnia")+
+  theme_minimal()
+
+           
+```
+
+#### 6. Relación entre el hábito de lectura y el nivel educativo
+ 
+```{r}
+tabla6
+tablapor6 = tabla6 %>%
+           prop.table(2) %>%  
+           round(2) #redondear el resultado a 2 decimales
+toPlot6 = as.data.frame(tablapor6)
+  ggplot(toPlot6, aes(x=Var2, y=Freq*100, fill=Var1)) +
+  geom_bar(position="stack", stat="identity")+ #Stack indica que son barras apiladas
+  geom_text(aes(label=paste0(Freq*100,"%")), 
+            position = position_stack(vjust = 0.5), 
+             size = 4,
+             fontface="bold")+
+  labs(x="Lectura", y="Porcentaje", fill="Nivel Educativo")+
+  theme_minimal()
+```
+###7.Relación entre el hábito de lectura y el sexo
+```{r}
+tabla7
+tablapor7 = tabla7 %>%
+           prop.table(2) %>%  
+           round(2) #redondear el resultado a 2 decimales
+toPlot7 = as.data.frame(tablapor7)
+ ggplot(toPlot7, aes(x=Var2, y=Freq*100, fill=Var1)) +
+  geom_bar(position="stack", stat="identity")+ #Stack indica que son barras apiladas
+  geom_text(aes(label=paste0(Freq*100,"%")), 
+            position = position_stack(vjust = 0.5), 
+             size = 4,
+             fontface="bold")+
+  labs(x="Lectura", y="Porcentaje", fill="Sexo")+
+  theme_minimal()
+```
+###8.Relación entre el hábito de lectura y el estratosocioeconómico
+
+```{r}
+tabla8
+tablapor8 = tabla8 %>%
+           prop.table(2) %>%  
+           round(2) #redondear el resultado a 2 decimales
+toPlot8 = as.data.frame(tablapor8)
+ ###8
+ ggplot(toPlot8, aes(x=Var2, y=Freq*100, fill=Var1)) +
+  geom_bar(position="stack", stat="identity")+ #Stack indica que son barras apiladas
+  geom_text(aes(label=paste0(Freq*100,"%")), 
+            position = position_stack(vjust = 0.5), 
+             size = 4,
+             fontface="bold")+
+  labs(x="Lectura", y="Porcentaje", fill="Estrato socioeconomico")+
+  theme_minimal()
+```
+
+# Regresión logística
+
+## Análisis de regresión {.tabset}
+
+
+
+
+
+### Regresiones
+
+```{r}
+data_lima=na.omit(data_lima)
+```
+
+#### Regresión 1
+
+```{r}
+
+# Ajustar el modelo de regresión logística con las variables modificadas
+modelo_logit <- glm(habito_lectura ~ asistencia_club + asistencia_festival + asistencia_biblioteca + sexo + edad,
+                    data = data_lima, 
+                    family = binomial)
+
+# Usar modelsummary para obtener una tabla bien formateada
+library(modelsummary)
+
+# Crear lista de modelos, en este caso solo uno
+modelrl <- list('Regresión Logística - Habito de Lectura' = modelo_logit)
+
+# Generar la tabla de resumen del modelo usando modelsummary
+modelsummary(modelrl,
+             title = "Regresión Logística - Habito de Lectura",
+             stars = TRUE,  # Agregar significancia estadística
+             output = "kableExtra")  # Generar una tabla con formato kableExtra
+```
+
+#### Regresión 2
+```{r}
+# Establecer semilla para la reproducibilidad
+set.seed(2019)
+
+# Ajustar el modelo de regresión logística con las variables modificadas
+modelo_logit1 <- glm(habito_lectura ~ asistencia_biblioteca + asistencia_festival + asistencia_club + estratosocio + nivel_educ + sexo + edad,
+                     data = data_lima, 
+                     family = binomial)
+
+# Usar modelsummary para obtener una tabla bien formateada
+library(modelsummary)
+
+# Crear lista de modelos, en este caso solo uno
+modelrl1 <- list('Regresión Logística - Habito de Lectura' = modelo_logit1)
+
+# Generar la tabla de resumen del modelo usando modelsummary
+modelsummary(modelrl1,
+             title = "Regresión Logística - Habito de Lectura",
+             stars = TRUE,  # Agregar significancia estadística
+             output = "kableExtra")  # Generar una tabla con formato kableExtra
+
+```
+
+#### Regresión 3
+```{r}
+
+
+# Establecer semilla para la reproducibilidad
+set.seed(2019)
+
+# Ajustar el modelo de regresión logística con las variables modificadas
+modelo_logit2 <- glm(habito_lectura ~ asistencia_biblioteca + asistencia_festival + asistencia_club + estratosocio + nivel_educ + etnia + sexo + edad,
+                     data = data_lima, 
+                     family = binomial)
+
+# Usar modelsummary para obtener una tabla bien formateada
+library(modelsummary)
+
+# Crear lista de modelos, en este caso solo uno
+modelrl2 <- list('Regresión Logística - Habito de Lectura' = modelo_logit2)
+
+# Generar la tabla de resumen del modelo usando modelsummary
+modelsummary(modelrl2,
+             title = "Regresión Logística - Habito de Lectura",
+             stars = TRUE,  # Agregar significancia estadística
+             output = "kableExtra")  # Generar una tabla con formato kableExtra
+
+
+```
+
+#### Regresión 4
+```{r}
+# Establecer semilla para la reproducibilidad
+set.seed(2019)
+
+# Ajustar el modelo de regresión logística con las variables modificadas
+modelo_logit3 <- glm(habito_lectura ~ asistencia_biblioteca + asistencia_festival + asistencia_club + estratosocio + nivel_educ + etnia + lengua_materna + sexo + edad,
+                     data = data_lima, 
+                     family = binomial)
+
+# Usar modelsummary para obtener una tabla bien formateada
+library(modelsummary)
+
+# Crear lista de modelos, en este caso solo uno
+modelrl <- list('Regresión Logística' = modelo_logit3)
+
+# Generar la tabla de resumen del modelo usando modelsummary
+modelsummary(modelrl,
+             title = "Regresión Logística - Habito de Lectura",
+             stars = TRUE,  # Agregar significancia estadística
+             output = "kableExtra")  # Generar una tabla con formato kableExtra
+
+```
+
+### Comparación de modelos (coef. exponenciados)
+
+```{r}
+modelsrl = list(
+  'Modelo Logístico (I)' = modelo_logit,
+  'Modelo Logístico (II)' = modelo_logit1,
+  'Modelo Logístico (III)' = modelo_logit2,
+  'Modelo Logístico (IV)' = modelo_logit3
+)
+
+# Formato personalizado para los números
+formatoNumero = function(x) format(x, digits = 4, scientific = FALSE)
+
+# Usar 'modelsummary' para mostrar los resultados con coeficientes exponenciados
+modelsummary(modelsrl,
+             fmt = formatoNumero,    # Usa la función de formato personalizada
+             exponentiate = TRUE,    # Exponenciar los coeficientes
+             statistic = 'conf.int', # Mostrar los intervalos de confianza
+             title = "Regresión Logística (Coeficientes Exponenciados)", # Título
+             stars = TRUE,           # Mostrar los asteriscos de significancia
+             output = "kableExtra")  # Formato kableExtra para mostrar la tabla
+```
+
+### Comparación de modelos
+
+```{r}
+library(lmtest)
+library(kableExtra)
+
+lrtest (modelo_logit,modelo_logit1,modelo_logit2,modelo_logit3) %>%
+  kable(caption = "Tabla LRT para comparar modelos") %>%
+  kable_styling(full_width = FALSE)
+```
+
+### comparacion visual de modelos 
+
+```{r}
+library(ggplot2)
+library(dotwhisker)
+
+dotwhisker::dwplot(list(
+    Logit_I = modelo_logit,
+    Logit_II = modelo_logit1,
+    Logit_III = modelo_logit2,
+    Logit_IV = modelo_logit3
+), exp = TRUE) + 
+  scale_y_discrete(labels = c(
+    "Lengua Materna: Originaria",
+    "Etnia: No responde",
+    "Etnia: Mestizo",
+    "Etnia: Indígena",
+    "Etnia: Blanco",
+    "Nivel Educativo: C",
+    "Nivel Educativo: Q",
+    "Nivel Educativo: L",
+    "Estrato: 5",
+    "Estrato: 4",
+    "Estrato: C",
+    "Estrato: Q",
+    "Estrato: Bajo",
+    "Edad",
+    "Sexo: Mujer",
+    "Asistencia: No Biblioteca",
+    "Asistencia: No Festival",
+    "Asistencia: No Club"
+  )) +
+  scale_color_discrete(name = "Modelos para:\nHábito de lectura") +
+  geom_vline(xintercept = 1, colour = "grey60", linetype = 2) +
+  theme_bw() +
+  labs(title = "Gráfico de Coeficientes Exponenciados",
+       x = "Odds Ratios (Intervalos de Confianza)",
+       y = "")
+```
+
+
+### Efectos marginales
+
+```{r}
+library(margins)
+marginalsData=summary(margins(modelo_logit))
+marginalsData%>% kable(caption = "Efectos Marginales Promedio (AME)- Modelo logit") %>%kableExtra::kable_styling(full_width = T)
+```
+
+### Gráfico de efectos marginales
+
+```{r}
+library(ggplot2)
+
+# Crear base del gráfico
+base <- ggplot(marginalsData, aes(x = factor, y = AME)) + 
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper))
+
+# Ajustar etiquetas del eje X
+base + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10))  # Modificar ángulo, alineación y tamaño
+```
+
